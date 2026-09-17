@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>可以和我一起约会吗？</title>
+  <style>
+    :root {
+      --bg-cream: #FFF9F5;
+      --pink-main: #FF85A1;
+      --pink-light: #FFD1DC;
+      --pink-soft: #FFF0F3;
+      --pink-dark: #E65C7B;
+      --text-main: #4A3E3D;
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --radius-large: 42px;
+      --shadow-soft: 0 20px 40px rgba(255, 133, 161, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--bg-cream) 0%, var(--pink-soft) 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* 背景装饰爱心与闪光 */
+    .bg-decor {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .sparkle {
+      position: absolute;
+      background: radial-gradient(circle, #FFF 10%, transparent 70%);
+      border-radius: 50%;
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(0.8); opacity: 0.3; }
+      50% { transform: scale(1.2); opacity: 0.8; }
+    }
+
+    /* 主卡片容器 */
+    .card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card-bg);
+      border-radius: var(--radius-large);
+      padding: 32px 24px;
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(10px);
+      border: 2px solid #FFF;
+      position: relative;
+      z-index: 1;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+    }
+
+    /* 顶部 44px 标题与虚线旋转圈 */
+    .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .dashed-heart-wrap {
+      position: relative;
+      width: 70px;
+      height: 70px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .dashed-ring {
+      position: absolute;
+      inset: 0;
+      border: 3px dashed var(--pink-main);
+      border-radius: 50%;
+      animation: rotateRing 12s linear infinite;
+    }
+
+    @keyframes rotateRing {
+      100% { transform: rotate(360deg); }
+    }
+
+    .heart-icon {
+      font-size: 32px;
+      animation: floatHeart 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatHeart {
+      from { transform: translateY(2px); }
+      to { transform: translateY(-4px); }
+    }
+
+    h1.title {
+      font-size: 22px;
+      height: 44px;
+      line-height: 44px;
+      color: var(--pink-dark);
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+
+    /* 阶段步骤管理 */
+    .step {
+      width: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    .step.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* 按钮通用 */
+    .btn {
+      border: none;
+      border-radius: 25px;
+      padding: 12px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      outline: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--pink-main), var(--pink-dark));
+      color: #FFF;
+      box-shadow: 0 8px 16px rgba(255, 133, 161, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.95);
+    }
+
+    .btn-secondary {
+      background: var(--pink-soft);
+      color: var(--pink-dark);
+      border: 1px solid var(--pink-light);
+    }
+
+    /* Step 0: 按钮布局修复 (上下结构) */
+    .ask-actions {
+      width: 100%;
+      height: 200px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .btn-yes {
+      font-size: 18px;
+      padding: 14px 40px;
+    }
+
+    .btn-no {
+      transition: all 0.2s ease-out;
+    }
+
+    /* Step 1: 确认 */
+    .emoji-hero {
+      font-size: 64px;
+      margin-bottom: 12px;
+    }
+
+    .confirm-text {
+      font-size: 16px;
+      color: var(--text-main);
+      margin-bottom: 24px;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    /* Step 2: 日期时间 */
+    .form-group {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      border: 1.5px solid var(--pink-light);
+      background: #FFF;
+      font-size: 16px;
+      color: var(--text-main);
+      outline: none;
+    }
+
+    .form-control:focus {
+      border-color: var(--pink-main);
+    }
+
+    /* Step 3: 3x3 餐食 */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      width: 100%;
+      margin-bottom: 16px;
+    }
+
+    .menu-item {
+      aspect-ratio: 1;
+      background: #FFF;
+      border: 2px solid var(--pink-soft);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 14px;
+      color: var(--text-main);
+      padding: 6px;
+    }
+
+    .menu-item span {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+
+    .menu-item.selected {
+      background: var(--pink-soft);
+      border-color: var(--pink-main);
+      color: var(--pink-dark);
+      font-weight: bold;
+      transform: scale(1.02);
+    }
+
+    /* Step 4: 摘要与海报 */
+    .summary-box {
+      width: 100%;
+      background: var(--pink-soft);
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    #posterCanvas {
+      display: none;
+    }
+
+    /* 悬浮音乐按钮 */
+    .music-btn {
+      position: fixed;
+      top: max(16px, env(safe-area-inset-top));
+      right: max(16px, env(safe-area-inset-right));
+      width: 40px;
+      height: 40px;
+      background: var(--card-bg);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      cursor: pointer;
+      z-index: 100;
+      border: 1px solid var(--pink-light);
+      font-size: 18px;
+    }
+
+    .music-btn.playing {
+      animation: rotateMusic 4s linear infinite;
+    }
+
+    @keyframes rotateMusic {
+      100% { transform: rotate(360deg); }
+    }
+
+    /* prefers-reduced-motion 兼容 */
+    @media (prefers-reduced-motion: reduce) {
+      .dashed-ring, .heart-icon, .sparkle, .music-btn.playing {
+        animation: none !important;
+      }
+      .card, .btn, .menu-item {
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 背景音乐控件 -->
+  <button class="music-btn" id="musicBtn" aria-label="播放/暂停背景音乐" role="button">🎵</button>
+  
+  <!-- 建议将 mp3 放在同级目录下，写相对路径：src="bgm.mp3" -->
+  <audio id="bgm" src="bgm.mp3" loop preload="auto"></audio>
+
+  <!-- 动态背景装饰 -->
+  <div class="bg-decor">
+    <div class="sparkle" style="top: 15%; left: 10%; width: 20px; height: 20px;"></div>
+    <div class="sparkle" style="top: 75%; left: 85%; width: 15px; height: 15px;"></div>
+    <div class="sparkle" style="top: 40%; left: 80%; width: 25px; height: 25px;"></div>
+  </div>
+
+  <main class="card" role="main">
+    <!-- 顶部固定 Header -->
+    <header class="header">
+      <div class="dashed-heart-wrap">
+        <div class="dashed-ring"></div>
+        <div class="heart-icon" aria-hidden="true">💖</div>
+      </div>
+      <h1 class="title">可以和我一起约会吗？</h1>
+    </header>
+
+    <!-- Step 0: 初始挑选互动 (不要/愿意 - 上下排列) -->
+    <section class="step active" id="step0" aria-label="约会邀请入口">
+      <div class="ask-actions" id="askArea">
+        <button class="btn btn-primary btn-yes" id="yesBtn">好呀，我愿意！</button>
+        <button class="btn btn-secondary btn-no" id="noBtn">不要</button>
+      </div>
+    </section>
+
+    <!-- Step 1: 确认与惊喜 -->
+    <section class="step" id="step1" aria-label="步骤一：浪漫引导">
+      <div class="emoji-hero">🎉🥳✨</div>
+      <p class="confirm-text">太棒啦！我就知道你一定会同意的！<br>接下来，我们一起安排完美的约会行程吧！</p>
+      <button class="btn btn-primary" onclick="nextStep(2)">继续选择时间 ➔</button>
+    </section>
+
+    <!-- Step 2: 日期时间选择 -->
+    <section class="step" id="step2" aria-label="步骤二：选择时间">
+      <div class="form-group">
+        <label for="dateInput">选择约会日期</label>
+        <input type="date" id="dateInput" class="form-control">
+      </div>
+      <div class="form-group">
+        <label for="timeInput">选择时间</label>
+        <input type="time" id="timeInput" class="form-control" value="12:30">
+      </div>
+      <button class="btn btn-primary" style="margin-top: 12px;" onclick="nextStep(3)">挑选好吃的 ➔</button>
+    </section>
+
+    <!-- Step 3: 美食网格挑选 -->
+    <section class="step" id="step3" aria-label="步骤三：挑选餐食">
+      <div class="menu-grid" id="menuGrid">
+        <div class="menu-item" data-name="馄饨" tabindex="0"><span>🥟</span>馄饨</div>
+        <div class="menu-item" data-name="黄焖鸡" tabindex="0"><span>🍲</span>黄焖鸡</div>
+        <div class="menu-item" data-name="粉面" tabindex="0"><span>🍜</span>粉面</div>
+        <div class="menu-item" data-name="炸串" tabindex="0"><span>🍢</span>炸串</div>
+        <div class="menu-item" data-name="小吃" tabindex="0"><span>🍡</span>小吃</div>
+        <div class="menu-item" data-name="零食" tabindex="0"><span>🍿</span>零食</div>
+        <div class="menu-item" data-name="奶茶" tabindex="0"><span>🧋</span>奶茶</div>
+        <div class="menu-item" data-name="咖啡" tabindex="0"><span>☕</span>咖啡</div>
+        <div class="menu-item" data-name="甜品" tabindex="0"><span>🍰</span>甜品</div>
+      </div>
+      <div class="form-group">
+        <input type="text" id="customFood" class="form-control" placeholder="自定义输入其他想吃的...">
+      </div>
+      <button class="btn btn-primary" onclick="generateSummary()">生成约会清单 ➔</button>
+    </section>
+
+    <!-- Step 4: 清单与海报导出 -->
+    <section class="step" id="step4" aria-label="步骤四：约会清单与分享">
+      <div class="summary-box" id="summaryContent"></div>
+      <button class="btn btn-primary" id="downloadBtn" onclick="downloadPoster()">📥 来看看约会海报吧~</button>
+    </section>
+  </main>
+
+  <canvas id="posterCanvas" width="1080" height="1440"></canvas>
+
+  <script>
+    // --- BGM 背景音乐管理 ---
+    const bgm = document.getElementById('bgm');
+    const musicBtn = document.getElementById('musicBtn');
+    let isMusicPlaying = false;
+
+    function toggleMusic() {
+      if (isMusicPlaying) {
+        bgm.pause();
+        musicBtn.classList.remove('playing');
+        musicBtn.textContent = '🔇';
+        isMusicPlaying = false;
+      } else {
+        bgm.play().then(() => {
+          musicBtn.classList.add('playing');
+          musicBtn.textContent = '🎵';
+          isMusicPlaying = true;
+        }).catch(() => {
+          console.log("音频播放被拦截，需要用户点击手动播放");
+        });
+      }
+    }
+
+    musicBtn.addEventListener('click', toggleMusic);
+
+    // 用户首次任意点击，自动解锁并播放 BGM
+    function autoPlayBgmOnce() {
+      if (!isMusicPlaying) {
+        toggleMusic();
+      }
+      document.removeEventListener('click', autoPlayBgmOnce);
+      document.removeEventListener('touchstart', autoPlayBgmOnce);
+    }
+    document.addEventListener('click', autoPlayBgmOnce);
+    document.addEventListener('touchstart', autoPlayBgmOnce);
+
+    // --- 步骤控制 ---
+    function nextStep(stepNum) {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      document.getElementById(`step${stepNum}`).classList.add('active');
+    }
+
+    // --- Step 0: "不要" 按钮调皮跑路逻辑 ---
+    const noBtn = document.getElementById('noBtn');
+    const askArea = document.getElementById('askArea');
+    const yesBtn = document.getElementById('yesBtn');
+
+    const noTexts = ["再想想嘛", "真的不考虑吗？", "再给你一次机会~", "不许选这个！", "我会伤心的🥺", "别点我啦！"];
+    let textIdx = 0;
+    let isAbsolute = false;
+
+    function moveNoBtn() {
+      if (!isAbsolute) {
+        noBtn.style.position = 'absolute';
+        isAbsolute = true;
+      }
+
+      const areaRect = askArea.getBoundingClientRect();
+      const btnRect = noBtn.getBoundingClientRect();
+
+      const maxX = areaRect.width - btnRect.width;
+      const maxY = areaRect.height - btnRect.height;
+
+      const randomX = Math.random() * maxX - (areaRect.width / 2 - btnRect.width / 2);
+      const randomY = Math.random() * maxY - (areaRect.height / 2 - btnRect.height / 2);
+
+      noBtn.style.transform = `translate(${randomX}px, ${randomY}px)`;
+      noBtn.textContent = noTexts[textIdx % noTexts.length];
+      textIdx++;
+    }
+
+    noBtn.addEventListener('mouseenter', moveNoBtn);
+    noBtn.addEventListener('touchstart', (e) => { e.preventDefault(); moveNoBtn(); });
+    yesBtn.addEventListener('click', () => nextStep(1));
+
+    // --- Step 2: 默认日期（明天）与最小日期限制 ---
+    const dateInput = document.getElementById('dateInput');
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const formatDate = (d) => d.toISOString().split('T')[0];
+    dateInput.value = formatDate(tomorrow);
+    dateInput.min = formatDate(today);
+
+    // --- Step 3: 餐食多选交互 ---
+    const selectedFoods = new Set();
+    document.querySelectorAll('.menu-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const name = item.dataset.name;
+        if (selectedFoods.has(name)) {
+          selectedFoods.delete(name);
+          item.classList.remove('selected');
+        } else {
+          selectedFoods.add(name);
+          item.classList.add('selected');
+        }
+      });
+    });
+
+    // --- Step 4: 导出海报生成 ---
+    let finalData = {};
+
+    function generateSummary() {
+      const date = dateInput.value;
+      const time = document.getElementById('timeInput').value;
+      const custom = document.getElementById('customFood').value.trim();
+
+      let foods = Array.from(selectedFoods);
+      if (custom) foods.push(custom);
+      if (foods.length === 0) foods.push("你决定好吃的~");
+
+      finalData = { date, time, foods: foods.join('、') };
+
+      document.getElementById('summaryContent').innerHTML = `
+        <strong>💖 约会甜蜜确认单</strong><br>
+        📅 <strong>日期：</strong>${finalData.date}<br>
+        ⏰ <strong>时间：</strong>${finalData.time}<br>
+        🍽️ <strong>美餐预订：</strong>${finalData.foods}
+      `;
+
+      nextStep(4);
+      renderCanvas();
+    }
+
+    function renderCanvas() {
+      const canvas = document.getElementById('posterCanvas');
+      const ctx = canvas.getContext('2d');
+
+      // 背景渐变
+      const gradient = ctx.createLinearGradient(0, 0, 1080, 1440);
+      gradient.addColorStop(0, '#FFF9F5');
+      gradient.addColorStop(1, '#FFF0F3');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 1080, 1440);
+
+      // 卡片白色绘制
+      ctx.fillStyle = '#FFFFFF';
+      ctx.shadowColor = 'rgba(255, 133, 161, 0.2)';
+      ctx.shadowBlur = 40;
+      ctx.beginPath();
+      ctx.roundRect(80, 100, 920, 1240, 60);
+      ctx.fill();
+
+      ctx.shadowColor = 'transparent'; // 重置阴影
+
+      // 标题绘制
+      ctx.fillStyle = '#E65C7B';
+      ctx.font = 'bold 56px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('💖 约会邀请确认单 💖', 540, 240);
+
+      ctx.strokeStyle = '#FFD1DC';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(180, 290);
+      ctx.lineTo(900, 290);
+      ctx.stroke();
+
+      // 内容绘制
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#4A3E3D';
+      
+      ctx.font = '42px sans-serif';
+      ctx.fillText(`📅  约会日期： ${finalData.date}`, 180, 420);
+      ctx.fillText(`⏰  约会时间： ${finalData.time}`, 180, 520);
+      
+      ctx.fillText(`🍽️  美餐选择：`, 180, 620);
+      
+      // 换行绘制美食清单
+      const words = finalData.foods.split('、');
+      let line = '';
+      let startY = 700;
+      ctx.font = '36px sans-serif';
+      ctx.fillStyle = '#FF85A1';
+
+      for(let i = 0; i < words.length; i++) {
+        let testLine = line + words[i] + '、';
+        if (ctx.measureText(testLine).width > 680 && i > 0) {
+          ctx.fillText(line.slice(0, -1), 230, startY);
+          line = words[i] + '、';
+          startY += 60;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line.slice(0, -1), 230, startY);
+
+      // 底部温馨提示
+      ctx.textAlign = 'center';
+      ctx.font = 'italic 36px sans-serif';
+      ctx.fillStyle = '#E65C7B';
+      ctx.fillText('不见不散哦，不见不散！✨', 540, 1200);
+    }
+
+    function downloadPoster() {
+      const canvas = document.getElementById('posterCanvas');
+      const link = document.createElement('a');
+      link.download = '约会邀请单.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+  </script>
+</body>
+</html>
